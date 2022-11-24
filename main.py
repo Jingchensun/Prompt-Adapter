@@ -85,7 +85,7 @@ def run_tip_adapter_F(cfg, cache_keys, cache_values, val_features, val_labels, t
 
         for i, (images, target) in enumerate(tqdm(train_loader_F)):
             images, target = images.cuda(), target.cuda()
-            print('images:',images.size())#([256, 3, 224, 224])
+            #print('images:',images.size())#([256, 3, 224, 224])
             with torch.no_grad():
                 image_features = clip_model.encode_image(images)
                 image_features /= image_features.norm(dim=-1, keepdim=True)
@@ -96,7 +96,7 @@ def run_tip_adapter_F(cfg, cache_keys, cache_values, val_features, val_labels, t
             tip_logits = clip_logits + cache_logits * alpha
 
             loss = F.cross_entropy(tip_logits, target)
-            print('target:',target) #
+            #print('target:',target) #
 
             acc = cls_acc(tip_logits, target)
             correct_samples += acc / 100 * len(tip_logits)
@@ -188,9 +188,9 @@ def main():
     clip_weights = clip_classifier(dataset.classnames, dataset.template, clip_model)
 
 
-    # clip_weights = torch.load('./mytensor3.pt',map_location='cuda')
+    # clip_weights = torch.load('./ucf101_200epcoh_promt.pt',map_location='cuda')
     # clip_weights = clip_weights.permute(1, 0)
-    # print('clip_weights:',clip_weights.size()) #torch.Size([1024, 100])
+    #print('clip_weights:',clip_weights.size()) #torch.Size([1024, 100])
 
 
 
@@ -207,7 +207,7 @@ def main():
     test_features, test_labels = pre_load_features(cfg, "test", clip_model, test_loader)
 
     # ------------------------------------------ Tip-Adapter ------------------------------------------
-    #run_tip_adapter(cfg, cache_keys, cache_values, val_features, val_labels, test_features, test_labels, clip_weights)
+    run_tip_adapter(cfg, cache_keys, cache_values, val_features, val_labels, test_features, test_labels, clip_weights)
 
     # ------------------------------------------ Tip-Adapter-F ------------------------------------------
     run_tip_adapter_F(cfg, cache_keys, cache_values, val_features, val_labels, test_features, test_labels, clip_weights, clip_model, train_loader_F)
