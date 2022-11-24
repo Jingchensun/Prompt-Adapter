@@ -119,7 +119,7 @@ def search_hp(cfg, cache_keys, cache_values, features, labels, clip_weights, ada
                     affinity = features @ cache_keys
 
                 cache_logits = ((-1) * (beta - beta * affinity)).exp() @ cache_values
-                clip_logits = 100. * features @ clip_weights
+                clip_logits = 100. * features @ clip_weights.t()
                 tip_logits = clip_logits + cache_logits * alpha
                 acc = cls_acc(tip_logits, labels)
             

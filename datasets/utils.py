@@ -336,8 +336,12 @@ class DatasetWrapper(TorchDataset):
 
         if self.return_img0:
             output['img0'] = self.to_tensor(img0)
-
-        return output['img'], output['label']
+        # # print('output_label:',output['label'])
+        # with open('/home/jason/coop/caltech.json', 'r') as fcc_file:
+        #     fcc_data = json.load(fcc_file)
+        # label_promt = 'This is a photo of ' + fcc_data[str(output['label'])]
+        # #print('label_promt:',label_promt)
+        return output['img'], output['label']#, label_promt
 
     def _transform_image(self, tfm, img0):
         img_list = []
