@@ -69,9 +69,11 @@ def run_tip_adapter_F(cfg, cache_keys, cache_values, test_features, test_labels,
                 image_features /= image_features.norm(dim=-1, keepdim=True)
 
             affinity = adapter(image_features)
-            cache_logits = ((-1) * (beta - beta * affinity)).exp() @ cache_values
+            #cache_logits = ((-1) * (beta - beta * affinity)).exp() @ cache_values
+            cache_logits = affinity @ cache_values
             clip_logits = 100. * image_features @ clip_weights
-            tip_logits = clip_logits + cache_logits * alpha
+            #tip_logits = clip_logits + cache_logits * alpha
+            tip_logits = clip_logits + cache_logits
 
             loss = F.cross_entropy(tip_logits, target)
 
@@ -92,9 +94,11 @@ def run_tip_adapter_F(cfg, cache_keys, cache_values, test_features, test_labels,
         adapter.eval()
 
         affinity = adapter(test_features)
-        cache_logits = ((-1) * (beta - beta * affinity)).exp() @ cache_values
+        #cache_logits = ((-1) * (beta - beta * affinity)).exp() @ cache_values
+        cache_logits = affinity @ cache_values
+
         clip_logits = 100. * test_features @ clip_weights
-        tip_logits = clip_logits + cache_logits * alpha
+        tip_logits = clip_logits + cache_logits #* alpha
         acc = cls_acc(tip_logits, test_labels)
 
         print("**** Tip-Adapter-F's test accuracy: {:.2f}. ****\n".format(acc))
@@ -146,25 +150,25 @@ def main():
 
     # Textual features
     print("Getting textual features as CLIP's classifier.")
-    #clip_weights = clip_classifier(imagenet.classnames, imagenet.template, clip_model)
+    clip_weights = clip_classifier(imagenet.classnames, imagenet.template, clip_model)
 
-    clip_weights = torch.load('./mytensor2.pt',map_location='cuda')
-    clip_weights = clip_weights.permute(1, 0)
-    print('clip_weights:',clip_weights.size()) #torch.Size([1024, 1000])
+    # clip_weights = torch.load('./mytensor2.pt',map_location='cuda')
+    # clip_weights = clip_weights.permute(1, 0)
+    # print('clip_weights:',clip_weights.size()) #torch.Size([1024, 1000])
 
     # Construct the cache model by few-shot training set
     print("\nConstructing cache model by few-shot visual features and labels.")
     cache_keys, cache_values = build_cache_model(cfg, clip_model, train_loader_cache)
-    print('cache_keys',cache_keys.size())
-    print('cache_values',cache_values.size())
+    # print('cache_keys',cache_keys.size())
+    # print('cache_values',cache_values.size())
 
     # Pre-load test features
     print("\nLoading visual features and labels from test set.")
     test_features, test_labels = pre_load_features(cfg, "test", clip_model, test_loader)
-    print('test_featurestest_features',test_features.size()) #[50000, 1024])
+    # print('test_featurestest_features',test_features.size()) #[50000, 1024])
 
     # ------------------------------------------ Tip-Adapter ------------------------------------------
-    run_tip_adapter(cfg, cache_keys, cache_values, test_features, test_labels, clip_weights)
+    #run_tip_adapter(cfg, cache_keys, cache_values, test_features, test_labels, clip_weights)
 
     # ------------------------------------------ Tip-Adapter-F ------------------------------------------
     run_tip_adapter_F(cfg, cache_keys, cache_values, test_features, test_labels, clip_weights, clip_model, train_loader_F)
