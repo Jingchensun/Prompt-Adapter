@@ -146,11 +146,11 @@ def main():
 
     # Textual features
     print("Getting textual features as CLIP's classifier.")
-    #clip_weights = clip_classifier(imagenet.classnames, imagenet.template, clip_model)
+    clip_weights = clip_classifier(imagenet.classnames, imagenet.template, clip_model)
 
-    clip_weights = torch.load('./mytensor2.pt',map_location='cuda')
-    clip_weights = clip_weights.permute(1, 0)
-    print('clip_weights:',clip_weights.size()) #torch.Size([1024, 1000])
+    # clip_weights = torch.load('./mytensor2.pt',map_location='cuda')
+    # clip_weights = clip_weights.permute(1, 0)
+    # print('clip_weights:',clip_weights.size()) #torch.Size([1024, 1000])
 
     # Construct the cache model by few-shot training set
     print("\nConstructing cache model by few-shot visual features and labels.")

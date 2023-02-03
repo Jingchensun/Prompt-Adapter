@@ -188,7 +188,8 @@ def main():
     clip_weights = clip_classifier(dataset.classnames, dataset.template, clip_model)
 
 
-    # clip_weights = torch.load('./ucf101_200epcoh_promt.pt',map_location='cuda')
+    #clip_weights = torch.load('./prompt_multitask/multitask_caltech101_prompt.pt',map_location='cuda')
+    # clip_weights = torch.load('./prompt_200epoch_vit16/caltech101_vit16.pt',map_location='cuda')
     # clip_weights = clip_weights.permute(1, 0)
     #print('clip_weights:',clip_weights.size()) #torch.Size([1024, 100])
 
