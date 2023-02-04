@@ -90,31 +90,6 @@ class TextEncoder(nn.Module):
 
         return x
 
-class TextEncoder2(nn.Module):
-    def __init__(self, clip_model):
-        super().__init__()
-        self.transformer = clip_model.transformer
-        self.positional_embedding = clip_model.positional_embedding
-        self.token_embedding = clip_model.token_embedding
-        self.ln_final = clip_model.ln_final
-        self.text_projection = clip_model.text_projection
-        self.dtype = clip_model.dtype
-
-    def forward(self, text):
-        x = self.token_embedding(text).type(self.dtype)  # [batch_size, n_ctx, d_model]
-        x = x + self.positional_embedding.type(self.dtype)
-
-        x = x.permute(1, 0, 2)  # NLD -> LND
-        x = self.transformer(x)
-        x = x.permute(1, 0, 2)  # LND -> NLD
-        x = self.ln_final(x).type(self.dtype)
-
-        # x.shape = [batch_size, n_ctx, transformer.width]
-        # take features from the eot embedding (eot_token is the highest number in each sequence)
-        x = x[torch.arange(x.shape[0]), text.argmax(dim=-1)] @ self.text_projection
-
-        return x
-
 
 class PromptLearner(nn.Module):
     def __init__(self, cfg, classnames, clip_model):
@@ -193,20 +168,21 @@ class PromptLearner(nn.Module):
 
 
 class CustomCLIP(nn.Module):
-    def __init__(self, cfg, classnames, clip_model):
+    def __init__(self, cfg, classnames, clip_model, cache_keys):
         super().__init__()
         self.prompt_learner = PromptLearner(cfg, classnames, clip_model)
         self.tokenized_prompts = self.prompt_learner.tokenized_prompts
         self.image_encoder = clip_model.visual
         self.text_encoder = TextEncoder(clip_model)
-        self.encode_text = TextEncoder2(clip_model)
         self.logit_scale = clip_model.logit_scale
         self.dtype = clip_model.dtype
+        self.adapter = nn.Linear(cache_keys.shape[0], cache_keys.shape[1], bias=False).to(clip_model.dtype).cuda()
+        self.adapter.weight = nn.Parameter(cache_keys.t())
+        self.beta, self.alpha = cfg['init_beta'], cfg['init_alpha']
+        
 
-    def forward(self, image):
+    def forward(self, image, cache_values):
         image_features = self.image_encoder(image.type(self.dtype))
-        #print(text_tensor.size())
-        #text_features_ori = self.encode_text(text_tensor)
 
         prompts = self.prompt_learner()
         #print('prompts',prompts.size()) #torch.Size([100, 77, 512])
@@ -225,94 +201,61 @@ class CustomCLIP(nn.Module):
         # print('text_features.size():',text_features.size()) #caltech torch.Size([100, 1024])
         logit_scale = self.logit_scale.exp()
         logits = logit_scale * image_features @ text_features.t()
- 
-
-        # text_features_ori = text_features_ori / text_features_ori.norm(dim=-1, keepdim=True)
-        # logits_per_image_ori = logit_scale * image_features @ text_features_ori.t()
-        # logits_per_text_ori = logits_per_image_ori.t()
 
 
-        return logits, image_features, text_features#, logits_per_image_ori, logits_per_text_ori
+        #output,image_features,text_features = model(images)
 
-def run_tip_adapter_F(cfg, cache_keys, cache_values, val_features, val_labels, test_features, test_labels, clip_model, train_loader_F, classnames):
+
+
+        affinity = self.adapter(image_features) 
+        #print('affinity.size()',affinity.size())#torch.Size([256, 1600])
+        #cache_logits = ((-1) * (self.beta - self.beta * affinity)).exp() @ cache_values
+        #print('cache_values:',cache_values.size()) #torch.Size([1600, 100])
+        #clip_logits = 100. * image_features @ clip_weights
+        cache_logits =  affinity @ cache_values
+        
+        #print('clip_logits.size()',clip_logits.size()) #torch.Size([256, 100])
+        tip_logits = logits + cache_logits #* self.alpha
+
+
+        return tip_logits
+
+def run_tip_adapter_F(cfg, cache_keys, cache_values, clip_model, train_loader_F, classnames, test_loader):
     
-    # Enable the cached keys to be learnable
-    adapter = nn.Linear(cache_keys.shape[0], cache_keys.shape[1], bias=False).to(clip_model.dtype).cuda()
-    print('cache_keys.shape[0]:',cache_keys.shape[0]) #1024
-    print('cache_keys.shape[1]:',cache_keys.shape[1]) #1600
-    adapter.weight = nn.Parameter(cache_keys.t())
-
-    
-    
-    optimizer = torch.optim.AdamW(adapter.parameters(), lr=cfg['lr'], eps=1e-4)
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, cfg['train_epoch'] * len(train_loader_F))
-    
-    beta, alpha = cfg['init_beta'], cfg['init_alpha']
     best_acc, best_epoch = 0.0, 0
 
+    model = CustomCLIP(cfg, classnames, clip_model, cache_keys)
 
-
-    model = CustomCLIP(cfg, classnames, clip_model)
+    # for name, param in model.named_parameters():
+    #     print(name, param.requires_grad)
     for name, param in model.named_parameters():
-        if "prompt_learner" not in name:
+        if name == "prompt_learner.ctx" or name == "adapter.weight":
+            param.requires_grad_(True)
+        else:
             param.requires_grad_(False)
+    # for name, param in model.named_parameters():
+    #     print(name, param.requires_grad)
     model=model.cuda()
 
+    optimizer = torch.optim.AdamW(model.parameters(), lr=cfg['lr'], eps=1e-4)
+    
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, cfg['train_epoch'] * len(train_loader_F))
 
     for train_idx in range(cfg['train_epoch']):
         # Train
-        adapter.train()
+        model.train()
         correct_samples, all_samples = 0, 0
         loss_list = []
         print('Train Epoch: {:} / {:}'.format(train_idx, cfg['train_epoch']))
 
         for i, (images, target) in enumerate(tqdm(train_loader_F)):
             images, target = images.cuda(), target.cuda()
-            #text = clip.tokenize(label_promt).cuda()
-            #print('text_size:',text.size()) #torch.Size([64, 77])
-            #print('images:',images.size())#([256, 3, 224, 224])
-            with torch.no_grad():
-                # image_features = clip_model.encode_image(images)
-                # print('image_features.size():',image_features.size()) #torch.Size([256, 1024])
-                # image_features /= image_features.norm(dim=-1, keepdim=True)
-                # text_features = clip_model.encode_text(text)
-                # print('text_features.size():',text_features.size()) #torch.Size([256, 1024])
-                # text_features /= text_features.norm(dim=-1, keepdim=True)
-
-                #prompt
                 
-                output,image_features,text_features = model(images)
+            tip_logits = model(images, cache_values)
 
+            loss = F.cross_entropy(tip_logits, target)
 
-
-            affinity = adapter(image_features) 
-            #print('affinity.size()',affinity.size())#torch.Size([256, 1600])
-            cache_logits = ((-1) * (beta - beta * affinity)).exp() @ cache_values
-            #print('cache_values:',cache_values.size()) #torch.Size([1600, 100])
-            #clip_logits = 100. * image_features @ clip_weights
-            clip_logits = output
-            #print('clip_logits.size()',clip_logits.size()) #torch.Size([256, 100])
-            tip_logits = clip_logits + cache_logits * alpha
-            #print('cache_logits:',cache_logits.size()) #torch.Size([256, 100]
-            #print(tip_logits.size()) #torch.Size([256, 100])
-
-            # cosine similarity as logits
-            # logit_scale = 100.
-            # logits_per_image = logit_scale * image_features @ text_features.t()
-            # #print('logits_per_image.size()',logits_per_image.shape[0]) #torch.Size([256, 256]) #64
-            # logits_per_text = logits_per_image.t()
-            # #print('logits_per_text.size()',logits_per_text.size())#torch.Size([256, 256])
-            # ground_truth = torch.arange(logits_per_image.shape[0],dtype=torch.long,device='cuda')
-            # #loss2 =  (F.cross_entropy(logits_per_image,ground_truth) +  F.cross_entropy(logits_per_text,ground_truth))/2
-            # image_loss = tip_logits @ tip_logits.t()
-            # loss2 = F.cross_entropy(image_loss, ground_truth) 
-   
-            loss3 = F.cross_entropy(clip_logits, target)
-            loss1 = F.cross_entropy(tip_logits, target)
-            #print('target:',len(target)) #
-            loss = loss1 + loss3
-
-            acc = cls_acc((tip_logits+clip_logits), target)
+            acc = cls_acc(tip_logits, target)
             correct_samples += acc / 100 * len(tip_logits)
             all_samples += len(tip_logits)
             loss_list.append(loss.item())
@@ -326,43 +269,25 @@ def run_tip_adapter_F(cfg, cache_keys, cache_values, val_features, val_labels, t
         print('LR: {:.6f}, Acc: {:.4f} ({:}/{:}), Loss: {:.4f}'.format(current_lr, correct_samples / all_samples, correct_samples, all_samples, sum(loss_list)/len(loss_list)))
 
         # Eval
-        adapter.eval()
+        model.eval()
+        for i, (images, target) in enumerate(tqdm(test_loader)):
+            images, target = images.cuda(), target.cuda()
+            tip_logits = model(images, cache_values)
 
-        affinity = adapter(test_features)
-        cache_logits = ((-1) * (beta - beta * affinity)).exp() @ cache_values
-        
-
-        # clip_weights = torch.load('./promt_text.pt',map_location='cuda')
-        # clip_weights = clip_weights.permute(1, 0)
-        # clip_logits = 100. * test_features @ clip_weights
-        clip_logits = 100. * test_features @ text_features.t()
-        clip_weights = text_features
-
-        tip_logits = clip_logits + cache_logits * alpha
-        acc = cls_acc((tip_logits+clip_logits), test_labels)
+            acc = cls_acc(tip_logits, target)
+            correct_samples += acc / 100 * len(tip_logits)
+            all_samples += len(tip_logits)
+        acc = correct_samples/all_samples
 
         print("**** Tip-Adapter-F's test accuracy: {:.2f}. ****\n".format(acc))
         if acc > best_acc:
             best_acc = acc
             best_epoch = train_idx
-            torch.save(adapter.weight, cfg['cache_dir'] + "/best_F_" + str(cfg['shots']) + "shots.pt")
+            torch.save(model.state_dict(), cfg['cache_dir'] + "/best_F_" + str(cfg['shots']) + "shots.pt")
     
-    adapter.weight = torch.load(cfg['cache_dir'] + "/best_F_" + str(cfg['shots']) + "shots.pt")
+    #PATH=cfg['cache_dir'] + "/best_F_" + str(cfg['shots']) + "shots.pt"
+    #model.load_state_dict(torch.load(PATH))
     print(f"**** After fine-tuning, Tip-Adapter-F's best test accuracy: {best_acc:.2f}, at epoch: {best_epoch}. ****\n")
-
-    print("\n-------- Searching hyperparameters on the val set. --------")
-
-    # Search Hyperparameters
-    best_beta, best_alpha = search_hp(cfg, cache_keys, cache_values, val_features, val_labels, clip_weights, adapter=adapter)
-
-    print("\n-------- Evaluating on the test set. --------")
-   
-    affinity = adapter(test_features)
-    cache_logits = ((-1) * (best_beta - best_beta * affinity)).exp() @ cache_values
-    
-    tip_logits = clip_logits + cache_logits * best_alpha
-    acc = cls_acc((tip_logits+clip_logits), test_labels)
-    print("**** Tip-Adapter-F's test accuracy: {:.2f}. ****\n".format(max(best_acc, acc)))
 
 
 def main():
@@ -392,7 +317,7 @@ def main():
     dataset = build_dataset(cfg['dataset'], cfg['root_path'], cfg['shots'])
 
     val_loader = build_data_loader(data_source=dataset.val, batch_size=64, is_train=False, tfm=preprocess, shuffle=False)
-    test_loader = build_data_loader(data_source=dataset.test, batch_size=64, is_train=False, tfm=preprocess, shuffle=False)
+    test_loader = build_data_loader(data_source=dataset.test, batch_size=256, is_train=False, tfm=preprocess, shuffle=False)
 
     train_tranform = transforms.Compose([
         transforms.RandomResizedCrop(size=224, scale=(0.5, 1), interpolation=transforms.InterpolationMode.BICUBIC),
@@ -421,17 +346,17 @@ def main():
 
     # Pre-load val features
     print("\nLoading visual features and labels from val set.")
-    val_features, val_labels = pre_load_features(cfg, "val", clip_model, val_loader)
+    #val_features, val_labels = pre_load_features(cfg, "val", clip_model, val_loader)
 
     # Pre-load test features
     print("\nLoading visual features and labels from test set.")
-    test_features, test_labels = pre_load_features(cfg, "test", clip_model, test_loader)
+    #test_features, test_labels = pre_load_features(cfg, "test", clip_model, test_loader)
 
     # ------------------------------------------ Tip-Adapter ------------------------------------------
     #run_tip_adapter(cfg, cache_keys, cache_values, val_features, val_labels, test_features, test_labels, clip_weights)
 
     # ------------------------------------------ Tip-Adapter-F ------------------------------------------
-    run_tip_adapter_F(cfg, cache_keys, cache_values, val_features, val_labels, test_features, test_labels, clip_model, train_loader_F, (dataset.classnames))
+    run_tip_adapter_F(cfg, cache_keys, cache_values, clip_model, train_loader_F, (dataset.classnames), test_loader)
            
 
 if __name__ == '__main__':

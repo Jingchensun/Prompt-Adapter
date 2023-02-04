@@ -10,7 +10,7 @@ template = ['a photo of a {}.']
 
 class StanfordCars(DatasetBase):
 
-    dataset_dir = 'stanford_cars'
+    dataset_dir = 'data/stanford_cars'
 
     def __init__(self, root, num_shots):
         self.dataset_dir = os.path.join(root, self.dataset_dir)
