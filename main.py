@@ -219,7 +219,7 @@ class CustomCLIP(nn.Module):
 
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
-        torch.save(text_features, './promt_text.pt')
+        #torch.save(text_features, './promt_text.pt')
 
         # print('image_features after:',image_features.size()) #torch.Size([25, 1024]) caltech torch.Size([8, 1024])
         # print('text_features.size():',text_features.size()) #caltech torch.Size([100, 1024])
