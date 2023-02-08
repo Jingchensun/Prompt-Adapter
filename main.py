@@ -189,15 +189,18 @@ def main():
 
 
     #clip_weights = torch.load('./prompt_multitask/multitask_caltech101_prompt.pt',map_location='cuda')
-    # clip_weights = torch.load('./prompt_200epoch_vit16/caltech101_vit16.pt',map_location='cuda')
-    # clip_weights = clip_weights.permute(1, 0)
-    #print('clip_weights:',clip_weights.size()) #torch.Size([1024, 100])
+    clip_weights = torch.load('./prompt_200epoch_vit16/multitask_11task_prompt.pt',map_location='cuda')
+    clip_weights = clip_weights.permute(1, 0)
+    print('clip_weights:',clip_weights.size()) #torch.Size([1024, 100]) torch.Size([512, 2191])
 
 
 
     # Construct the cache model by few-shot training set
     print("\nConstructing cache model by few-shot visual features and labels.")
-    cache_keys, cache_values = build_cache_model(cfg, clip_model, train_loader_cache)
+    #cache_keys, cache_values = build_cache_model(cfg, clip_model, train_loader_cache)
+    cache_keys = torch.load('caches2/' + '/multi_task_keys_' + str(16) + "shots.pt").cuda()
+    cache_values = torch.load('caches2/' + '/multi_task_values_' + str(16) + "shots.pt").cuda()
+
 
     # Pre-load val features
     print("\nLoading visual features and labels from val set.")
@@ -208,7 +211,7 @@ def main():
     test_features, test_labels = pre_load_features(cfg, "test", clip_model, test_loader)
 
     # ------------------------------------------ Tip-Adapter ------------------------------------------
-    #run_tip_adapter(cfg, cache_keys, cache_values, val_features, val_labels, test_features, test_labels, clip_weights)
+    run_tip_adapter(cfg, cache_keys, cache_values, val_features, val_labels, test_features, test_labels, clip_weights)
 
     # ------------------------------------------ Tip-Adapter-F ------------------------------------------
     run_tip_adapter_F(cfg, cache_keys, cache_values, val_features, val_labels, test_features, test_labels, clip_weights, clip_model, train_loader_F)

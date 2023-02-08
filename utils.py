@@ -53,19 +53,32 @@ def build_cache_model(cfg, clip_model, train_loader_cache):
                 for i, (images, target) in enumerate(tqdm(train_loader_cache)):
                     images = images.cuda()
                     image_features = clip_model.encode_image(images)
+                    #print('image_features :',image_features.size()) #torch.Size([256, 512])
                     train_features.append(image_features)
                     if augment_idx == 0:
                         target = target.cuda()
-                        cache_values.append(target)
+                        #print(target.size()) #torch.Size([256]) torch.Size([256]) torch.Size([240])
+                        cache_values.append(target) 
+                #print('train_features:',len(train_features)) #3
                 cache_keys.append(torch.cat(train_features, dim=0).unsqueeze(0))
-            
+        
+        #print('cache_keys1:',len(cache_keys)) #10
+        #print('cache_keys1:',torch.cat(cache_keys, dim=0).size()) #torch.Size([10, 752, 512])
         cache_keys = torch.cat(cache_keys, dim=0).mean(dim=0)
+        #print('cache_keys2:',cache_keys.size())  #torch.Size([752, 512])
         cache_keys /= cache_keys.norm(dim=-1, keepdim=True)
+        #print('cache_keys3:',cache_keys.size())  #torch.Size([752, 512])
         cache_keys = cache_keys.permute(1, 0)
-        print('cache_keys:',cache_keys.size())
-        cache_values = F.one_hot(torch.cat(cache_values, dim=0)).half()
-        print('cache_values:',cache_values.size())
+        #print('cache_keys4:',cache_keys.size())  #torch.Size([512, 752])
+        #print('cache_keys:',cache_keys.size())
+        #print('cache_values1:',torch.cat(cache_values, dim=0))#rch.Size([752])
+        #cache_values = F.one_hot(torch.cat(cache_values, dim=0)).half()
+        cache_values = torch.cat(cache_values, dim=0)
+        print('cache_values2:',cache_values) #torch.Size([752, 47])
 
+        #assert(1==0)
+        # torch.save(cache_keys, cfg['cache_dir'] + '/keys_' + str(cfg['shots']) + "shots.pt")
+        # torch.save(cache_values, cfg['cache_dir'] + '/values_' + str(cfg['shots']) + "shots.pt")
         torch.save(cache_keys, cfg['cache_dir'] + '/keys_' + str(cfg['shots']) + "shots.pt")
         torch.save(cache_values, cfg['cache_dir'] + '/values_' + str(cfg['shots']) + "shots.pt")
 

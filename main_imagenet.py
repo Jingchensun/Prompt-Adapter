@@ -118,7 +118,7 @@ def main():
     
     cfg = yaml.load(open(args.config, 'r'), Loader=yaml.Loader)
 
-    cache_dir = os.path.join('./caches', cfg['dataset'])
+    cache_dir = os.path.join('./caches2', cfg['dataset'])
     os.makedirs(cache_dir, exist_ok=True)
     cfg['cache_dir'] = cache_dir
 
@@ -156,18 +156,18 @@ def main():
     print("\nConstructing cache model by few-shot visual features and labels.")
     cache_keys, cache_values = build_cache_model(cfg, clip_model, train_loader_cache)
     print('cache_keys',cache_keys.size())
-    print('cache_values',cache_values.size())
+    # print('cache_values',cache_values.size())
 
-    # Pre-load test features
-    print("\nLoading visual features and labels from test set.")
-    test_features, test_labels = pre_load_features(cfg, "test", clip_model, test_loader)
-    print('test_featurestest_features',test_features.size()) #[50000, 1024])
+    # # Pre-load test features
+    # print("\nLoading visual features and labels from test set.")
+    # test_features, test_labels = pre_load_features(cfg, "test", clip_model, test_loader)
+    # print('test_featurestest_features',test_features.size()) #[50000, 1024])
 
-    # ------------------------------------------ Tip-Adapter ------------------------------------------
-    run_tip_adapter(cfg, cache_keys, cache_values, test_features, test_labels, clip_weights)
+    # # ------------------------------------------ Tip-Adapter ------------------------------------------
+    # run_tip_adapter(cfg, cache_keys, cache_values, test_features, test_labels, clip_weights)
 
-    # ------------------------------------------ Tip-Adapter-F ------------------------------------------
-    run_tip_adapter_F(cfg, cache_keys, cache_values, test_features, test_labels, clip_weights, clip_model, train_loader_F)
+    # # ------------------------------------------ Tip-Adapter-F ------------------------------------------
+    # run_tip_adapter_F(cfg, cache_keys, cache_values, test_features, test_labels, clip_weights, clip_model, train_loader_F)
            
 
 if __name__ == '__main__':
