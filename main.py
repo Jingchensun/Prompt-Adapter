@@ -185,7 +185,7 @@ def main():
 
     # Textual features
     print("\nGetting textual features as CLIP's classifier.")
-    clip_weights = clip_classifier(dataset.classnames, dataset.template, clip_model)
+    #clip_weights = clip_classifier(dataset.classnames, dataset.template, clip_model)
 
 
     #clip_weights = torch.load('./prompt_multitask/multitask_caltech101_prompt.pt',map_location='cuda')
@@ -199,16 +199,23 @@ def main():
     print("\nConstructing cache model by few-shot visual features and labels.")
     #cache_keys, cache_values = build_cache_model(cfg, clip_model, train_loader_cache)
     cache_keys = torch.load('caches2/' + '/multi_task_keys_' + str(16) + "shots.pt").cuda()
+    print(cache_keys.size()) #torch.Size([512, 35056])
     cache_values = torch.load('caches2/' + '/multi_task_values_' + str(16) + "shots.pt").cuda()
+    print(cache_values.size()) #torch.Size([35056, 2191])
 
 
     # Pre-load val features
     print("\nLoading visual features and labels from val set.")
     val_features, val_labels = pre_load_features(cfg, "val", clip_model, val_loader)
+    print('val_features:',val_features.size())
+    print('val_labels:',val_labels.size())
 
     # Pre-load test features
     print("\nLoading visual features and labels from test set.")
     test_features, test_labels = pre_load_features(cfg, "test", clip_model, test_loader)
+    print('test_features:',test_features.size())
+    print('test_labels:',test_labels.size())
+    
 
     # ------------------------------------------ Tip-Adapter ------------------------------------------
     run_tip_adapter(cfg, cache_keys, cache_values, val_features, val_labels, test_features, test_labels, clip_weights)
