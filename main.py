@@ -63,14 +63,32 @@ def run_tip_adapter(cfg, cache_keys, cache_values, val_features, val_labels, tes
     acc = cls_acc(tip_logits, test_labels)
     print("**** Tip-Adapter's test accuracy: {:.2f}. ****\n".format(acc))
 
+class MyNet(nn.Module):
+    def __init__(self, cache_keys):
+        super(MyNet, self).__init__()
+        alpha = torch.ones(1, requires_grad=True)
+        beta = torch.ones(1, requires_grad=True)
+        self.alpha = nn.Parameter(alpha)
+        self.beta = nn.Parameter(beta)
+        self.adapter = nn.Linear(cache_keys.shape[0], cache_keys.shape[1], bias=False)#.to(clip_model.dtype).cuda()
+
+    def forward(self, image_features, cache_values, clip_weights):
+        affinity = self.adapter(image_features)
+        cache_logits = ((-1) * (self.beta - self.beta * affinity)).exp() @ cache_values
+        clip_logits = 100. * image_features @ clip_weights
+        tip_logits = clip_logits + cache_logits * self.alpha
+
+        return tip_logits
 
 def run_tip_adapter_F(cfg, cache_keys, cache_values, val_features, val_labels, test_features, test_labels, clip_weights, clip_model, train_loader_F):
     
     # Enable the cached keys to be learnable
-    adapter = nn.Linear(cache_keys.shape[0], cache_keys.shape[1], bias=False).to(clip_model.dtype).cuda()
-    adapter.weight = nn.Parameter(cache_keys.t())
+    # adapter = nn.Linear(cache_keys.shape[0], cache_keys.shape[1], bias=False).to(clip_model.dtype).cuda()
+    # adapter.weight = nn.Parameter(cache_keys.t())
+    model = MyNet(cache_keys)
+    model.to(clip_model.dtype).cuda()
     
-    optimizer = torch.optim.AdamW(adapter.parameters(), lr=cfg['lr'], eps=1e-4)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=cfg['lr'], eps=1e-4)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, cfg['train_epoch'] * len(train_loader_F))
     
     beta, alpha = cfg['init_beta'], cfg['init_alpha']
@@ -78,7 +96,7 @@ def run_tip_adapter_F(cfg, cache_keys, cache_values, val_features, val_labels, t
 
     for train_idx in range(cfg['train_epoch']):
         # Train
-        adapter.train()
+        model.train()
         correct_samples, all_samples = 0, 0
         loss_list = []
         print('Train Epoch: {:} / {:}'.format(train_idx, cfg['train_epoch']))
@@ -90,10 +108,10 @@ def run_tip_adapter_F(cfg, cache_keys, cache_values, val_features, val_labels, t
                 image_features = clip_model.encode_image(images)
                 image_features /= image_features.norm(dim=-1, keepdim=True)
 
-            affinity = adapter(image_features)
-            cache_logits = ((-1) * (beta - beta * affinity)).exp() @ cache_values
-            clip_logits = 100. * image_features @ clip_weights
-            tip_logits = clip_logits + cache_logits * alpha
+            tip_logits = model(image_features, cache_values, clip_weights)
+            # cache_logits = ((-1) * (beta - beta * affinity)).exp() @ cache_values
+            # clip_logits = 100. * image_features @ clip_weights
+            # tip_logits = clip_logits + cache_logits * alpha
 
             loss = F.cross_entropy(tip_logits, target)
             #print('target:',target) #
@@ -112,38 +130,42 @@ def run_tip_adapter_F(cfg, cache_keys, cache_values, val_features, val_labels, t
         print('LR: {:.6f}, Acc: {:.4f} ({:}/{:}), Loss: {:.4f}'.format(current_lr, correct_samples / all_samples, correct_samples, all_samples, sum(loss_list)/len(loss_list)))
 
         # Eval
-        adapter.eval()
+        model.eval()
+        tip_logits = model(test_features, cache_values, clip_weights)
 
-        affinity = adapter(test_features)
-        cache_logits = ((-1) * (beta - beta * affinity)).exp() @ cache_values
-        clip_logits = 100. * test_features @ clip_weights
-        tip_logits = clip_logits + cache_logits * alpha
+        # affinity = adapter(test_features)
+        # cache_logits = ((-1) * (beta - beta * affinity)).exp() @ cache_values
+        # clip_logits = 100. * test_features @ clip_weights
+        # tip_logits = clip_logits + cache_logits * alpha
         acc = cls_acc(tip_logits, test_labels)
 
         print("**** Tip-Adapter-F's test accuracy: {:.2f}. ****\n".format(acc))
         if acc > best_acc:
             best_acc = acc
             best_epoch = train_idx
-            torch.save(adapter.weight, cfg['cache_dir'] + "/best_F_" + str(cfg['shots']) + "shots.pt")
+            torch.save(model.state_dict(), cfg['cache_dir'] + "/best_F_" + str(cfg['shots']) + "shots.pt")
     
-    adapter.weight = torch.load(cfg['cache_dir'] + "/best_F_" + str(cfg['shots']) + "shots.pt")
+    model.load_state_dict(torch.load(cfg['cache_dir'] + "/best_F_" + str(cfg['shots']) + "shots.pt"))
     print(f"**** After fine-tuning, Tip-Adapter-F's best test accuracy: {best_acc:.2f}, at epoch: {best_epoch}. ****\n")
 
     print("\n-------- Searching hyperparameters on the val set. --------")
 
     # Search Hyperparameters
-    best_beta, best_alpha = search_hp(cfg, cache_keys, cache_values, val_features, val_labels, clip_weights, adapter=adapter)
+    #best_beta, best_alpha = search_hp(cfg, cache_keys, cache_values, val_features, val_labels, clip_weights, adapter=adapter)
 
     #best_beta, best_alpha = search_hp(cfg, cache_keys, cache_values, test_features, test_labels, clip_weights, adapter=adapter)
 
-    print("\n-------- Evaluating on the test set. --------")
+    # print("\n-------- Evaluating on the test set. --------")
    
-    affinity = adapter(test_features)
-    cache_logits = ((-1) * (best_beta - best_beta * affinity)).exp() @ cache_values
+
+    # tip_logits = model(test_features, cache_values, clip_weights)
+
+    # # affinity = adapter(test_features)
+    # # cache_logits = ((-1) * (best_beta - best_beta * affinity)).exp() @ cache_values
     
-    tip_logits = clip_logits + cache_logits * best_alpha
-    acc = cls_acc(tip_logits, test_labels)
-    print("**** Tip-Adapter-F's test accuracy: {:.2f}. ****\n".format(max(best_acc, acc)))
+    # # tip_logits = clip_logits + cache_logits * best_alpha
+    # acc = cls_acc(tip_logits, test_labels)
+    # print("**** Tip-Adapter-F's test accuracy: {:.2f}. ****\n".format(max(best_acc, acc)))
 
 
 def main():
@@ -220,7 +242,7 @@ def main():
     
 
     # ------------------------------------------ Tip-Adapter ------------------------------------------
-    run_tip_adapter(cfg, cache_keys, cache_values, val_features, val_labels, test_features, test_labels, clip_weights)
+    #run_tip_adapter(cfg, cache_keys, cache_values, val_features, val_labels, test_features, test_labels, clip_weights)
 
     # ------------------------------------------ Tip-Adapter-F ------------------------------------------
     run_tip_adapter_F(cfg, cache_keys, cache_values, val_features, val_labels, test_features, test_labels, clip_weights, clip_model, train_loader_F)
