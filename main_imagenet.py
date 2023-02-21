@@ -146,20 +146,20 @@ def main():
 
     # Textual features
     print("Getting textual features as CLIP's classifier.")
-    #clip_weights = clip_classifier(imagenet.classnames, imagenet.template, clip_model)
+    clip_weights = clip_classifier(imagenet.classnames, imagenet.template, clip_model)
 
     #clip_weights = torch.load('./prompt_multitask/multitask_caltech101_prompt.pt',map_location='cuda')
-    clip_weights = torch.load('./prompt_200epoch_vit16/multitask_11task_prompt.pt',map_location='cuda')
-    clip_weights = clip_weights.permute(1, 0)
-    print('clip_weights:',clip_weights.size()) #torch.Size([1024, 100]) torch.Size([512, 2191])
+    # clip_weights = torch.load('./prompt_200epoch_vit16/imagenet_vit16.pt',map_location='cuda')
+    # clip_weights = clip_weights.permute(1, 0)
+    # print('clip_weights:',clip_weights.size()) #torch.Size([1024, 100]) torch.Size([512, 2191])
 
 
 
     # Construct the cache model by few-shot training set
     print("\nConstructing cache model by few-shot visual features and labels.")
-    #cache_keys, cache_values = build_cache_model(cfg, clip_model, train_loader_cache)
-    cache_keys = torch.load('caches2/' + '/multi_task_keys_' + str(16) + "shots.pt").cuda()
-    cache_values = torch.load('caches2/' + '/multi_task_values_' + str(16) + "shots.pt").cuda()
+    cache_keys, cache_values = build_cache_model(cfg, clip_model, train_loader_cache)
+    # cache_keys = torch.load('caches2/' + '/multi_task_keys_' + str(16) + "shots.pt").cuda()
+    # cache_values = torch.load('caches2/' + '/multi_task_values_' + str(16) + "shots.pt").cuda()
 
 
     # # Construct the cache model by few-shot training set

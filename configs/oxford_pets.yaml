@@ -14,8 +14,8 @@ load_pre_feat: False
 search_hp: True
 # search_hp: False
 
-search_scale: [7, 3]
-search_step: [200, 20]
+search_scale: [50, 50]
+search_step: [200, 200]
 
 init_beta: 1
 init_alpha: 1.17

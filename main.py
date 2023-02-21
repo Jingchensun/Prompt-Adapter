@@ -134,6 +134,8 @@ def run_tip_adapter_F(cfg, cache_keys, cache_values, val_features, val_labels, t
     # Search Hyperparameters
     best_beta, best_alpha = search_hp(cfg, cache_keys, cache_values, val_features, val_labels, clip_weights, adapter=adapter)
 
+    #best_beta, best_alpha = search_hp(cfg, cache_keys, cache_values, test_features, test_labels, clip_weights, adapter=adapter)
+
     print("\n-------- Evaluating on the test set. --------")
    
     affinity = adapter(test_features)
@@ -189,7 +191,7 @@ def main():
 
 
     #clip_weights = torch.load('./prompt_multitask/multitask_caltech101_prompt.pt',map_location='cuda')
-    clip_weights = torch.load('./prompt_200epoch_vit16/multitask_11task_prompt.pt',map_location='cuda')
+    clip_weights = torch.load('./prompt_tensor/oxfordpets_vit16.pt',map_location='cuda')
     clip_weights = clip_weights.permute(1, 0)
     print('clip_weights:',clip_weights.size()) #torch.Size([1024, 100]) torch.Size([512, 2191])
 
@@ -197,24 +199,24 @@ def main():
 
     # Construct the cache model by few-shot training set
     print("\nConstructing cache model by few-shot visual features and labels.")
-    #cache_keys, cache_values = build_cache_model(cfg, clip_model, train_loader_cache)
-    cache_keys = torch.load('caches2/' + '/multi_task_keys_' + str(16) + "shots.pt").cuda()
-    print(cache_keys.size()) #torch.Size([512, 35056])
-    cache_values = torch.load('caches2/' + '/multi_task_values_' + str(16) + "shots.pt").cuda()
-    print(cache_values.size()) #torch.Size([35056, 2191])
+    cache_keys, cache_values = build_cache_model(cfg, clip_model, train_loader_cache)
+    # cache_keys = torch.load('caches2/' + '/multi_task_keys_' + str(16) + "shots.pt").cuda()
+    # print(cache_keys.size()) #torch.Size([512, 35056])
+    # cache_values = torch.load('caches2/' + '/multi_task_values_' + str(16) + "shots.pt").cuda()
+    # print(cache_values.size()) #torch.Size([35056, 2191])
 
 
     # Pre-load val features
     print("\nLoading visual features and labels from val set.")
     val_features, val_labels = pre_load_features(cfg, "val", clip_model, val_loader)
-    print('val_features:',val_features.size())
-    print('val_labels:',val_labels.size())
+    # print('val_features:',val_features.size())
+    # print('val_labels:',val_labels.size())
 
     # Pre-load test features
     print("\nLoading visual features and labels from test set.")
     test_features, test_labels = pre_load_features(cfg, "test", clip_model, test_loader)
-    print('test_features:',test_features.size())
-    print('test_labels:',test_labels.size())
+    # print('test_features:',test_features.size())
+    # print('test_labels:',test_labels.size())
     
 
     # ------------------------------------------ Tip-Adapter ------------------------------------------

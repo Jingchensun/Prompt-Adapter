@@ -72,9 +72,9 @@ def build_cache_model(cfg, clip_model, train_loader_cache):
         #print('cache_keys4:',cache_keys.size())  #torch.Size([512, 752])
         #print('cache_keys:',cache_keys.size())
         #print('cache_values1:',torch.cat(cache_values, dim=0))#rch.Size([752])
-        #cache_values = F.one_hot(torch.cat(cache_values, dim=0)).half()
-        cache_values = torch.cat(cache_values, dim=0)
-        print('cache_values2:',cache_values) #torch.Size([752, 47])
+        cache_values = F.one_hot(torch.cat(cache_values, dim=0)).half()
+        #cache_values = torch.cat(cache_values, dim=0)
+        #print('cache_values2:',cache_values) #torch.Size([752, 47])
 
         #assert(1==0)
         # torch.save(cache_keys, cfg['cache_dir'] + '/keys_' + str(cfg['shots']) + "shots.pt")
@@ -119,7 +119,9 @@ def search_hp(cfg, cache_keys, cache_values, features, labels, clip_weights, ada
     if cfg['search_hp'] == True:
     
         beta_list = [i * (cfg['search_scale'][0] - 0.1) / cfg['search_step'][0] + 0.1 for i in range(cfg['search_step'][0])]
+        print('beta_list',beta_list)
         alpha_list = [i * (cfg['search_scale'][1] - 0.1) / cfg['search_step'][1] + 0.1 for i in range(cfg['search_step'][1])]
+        print('alpha_list',alpha_list)
 
         best_acc = 0
         best_beta, best_alpha = 0, 0
