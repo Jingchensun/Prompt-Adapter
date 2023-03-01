@@ -103,7 +103,7 @@ for dataset in datasets:
         marker="o",
         markersize=MS,
         color=COLORS["ours_v16_end"],
-        label="CLIP + CoOp ($M\!=\!16$, end)",
+        label="CoOp",
         alpha=ALPHA
     )
     ax.plot(
@@ -111,7 +111,7 @@ for dataset in datasets:
         marker="o",
         markersize=MS,
         color=COLORS["ours_v16_mid"],
-        label="CLIP + CoOp ($M\!=\!16$, mid)",
+        label="UPT",
         alpha=ALPHA
     )
     ax.plot(
@@ -119,7 +119,7 @@ for dataset in datasets:
         marker="o",
         markersize=MS,
         color=COLORS["ours_v16_end_csc"],
-        label="CLIP + CoOp ($M\!=\!16$, end, CSC)",
+        label="Tip-Adapter-F",
         alpha=ALPHA
     )
     ax.plot(
@@ -127,7 +127,7 @@ for dataset in datasets:
         marker="o",
         markersize=MS,
         color=COLORS["ours_v16_mid_csc"],
-        label="CLIP + CoOp ($M\!=\!16$, mid, CSC)",
+        label="Prompt-Adapter-F",
         alpha=ALPHA
     )
     ax.plot(
@@ -135,7 +135,7 @@ for dataset in datasets:
         marker="o",
         markersize=MS,
         color=COLORS["linear"],
-        label="Linear probe CLIP",
+        label="Linear Probe CLIP",
         linestyle="dotted",
         alpha=ALPHA
     )
@@ -190,7 +190,7 @@ ax.plot(
     marker="o",
     markersize=MS,
     color=COLORS["ours_v16_end"],
-    label="CLIP + CoOp ($M\!=\!16$, end)",
+    label="CoOp",
     alpha=ALPHA
 )
 ax.plot(
@@ -198,7 +198,7 @@ ax.plot(
     marker="o",
     markersize=MS,
     color=COLORS["ours_v16_mid"],
-    label="CLIP + CoOp ($M\!=\!16$, mid)",
+    label="UPT",
     alpha=ALPHA
 )
 ax.plot(
@@ -206,7 +206,7 @@ ax.plot(
     marker="o",
     markersize=MS,
     color=COLORS["ours_v16_end_csc"],
-    label="CLIP + CoOp ($M\!=\!16$, end, CSC)",
+    label="Tip-Adapter-F",
     alpha=ALPHA
 )
 ax.plot(
@@ -214,7 +214,7 @@ ax.plot(
     marker="o",
     markersize=MS,
     color=COLORS["ours_v16_mid_csc"],
-    label="CLIP + CoOp ($M\!=\!16$, mid, CSC)",
+    label="Prompt-Adapter-F",
     alpha=ALPHA
 )
 ax.plot(
@@ -222,7 +222,7 @@ ax.plot(
     marker="o",
     markersize=MS,
     color=COLORS["linear"],
-    label="Linear probe CLIP",
+    label="Linear Probe CLIP",
     linestyle="dotted",
     alpha=ALPHA
 )
