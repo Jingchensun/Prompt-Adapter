@@ -174,7 +174,7 @@ def main():
     print('test_featurestest_features',test_features.size()) #[50000, 1024])
 
     # ------------------------------------------ Tip-Adapter ------------------------------------------
-    #run_tip_adapter(cfg, cache_keys, cache_values, test_features, test_labels, clip_weights)
+    run_tip_adapter(cfg, cache_keys, cache_values, test_features, test_labels, clip_weights)
 
     # ------------------------------------------ Tip-Adapter-F ------------------------------------------
     run_tip_adapter_F(cfg, cache_keys, cache_values, test_features, test_labels, clip_weights, clip_model, train_loader_F)
