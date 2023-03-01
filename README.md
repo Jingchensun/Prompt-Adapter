@@ -1,73 +1,62 @@
-# Tip-Adapter: Training-free Adaption of CLIP for Few-shot Classification
-Official implementation of ['Tip-Adapter: Training-free Adaption of CLIP for Few-shot Classification'](https://arxiv.org/pdf/2207.09519.pdf).
+# Prompt-Adapter: Prompt based Training-free Adaption of CLIP for Few-shot Classification
 
-The paper has been accepted by **ECCV 2022**.
-## Introduction
 
-Tip-Adapter is a training-free adaption method for CLIP to conduct few-shot classification, which not only inherits the training-free advantage of zero-shot CLIP but also performs comparably to those training-required approaches. Tip-Adapter constructs the adapter via a key-value cache model from the few-shot training set, and updates the prior knowledge encoded in CLIP by feature retrieval. On top of that, the performance of Tip-Adapter can be further boosted to be state-of-the-art by fine-tuning the cache model for only 10x fewer epochs than existing approaches, which is both effective and efficient.  
-
-<div align="center">
-  <img width=900 src="cache_model.png"/>
-</div>
-
-## Requirements
-### Installation
+### Step 1: Installation
 Create a conda environment and install dependencies:
 ```bash
-git clone https://github.com/gaopengcuhk/Tip-Adapter.git
-cd Tip-Adapter
-
-conda create -n tip_adapter python=3.7
-conda activate tip_adapter
+conda create -y -n torch180 python=3.8
+conda activate torch180
+pip3 install torch==1.8.2 torchvision==0.9.2 torchaudio==0.8.2 --extra-index-url https://download.pytorch.org/whl/lts/1.8/cu111
 
 pip install -r requirements.txt
 
-# Install the according versions of torch and torchvision
-conda install pytorch torchvision cudatoolkit
 ```
 
-### Dataset
-Follow [DATASET.md](https://github.com/gaopengcuhk/Tip-Adapter/blob/main/DATASET.md) to install ImageNet and other 10 datasets referring to CoOp.
+### Step 2: Dataset
+All datasets are set in A5000 server. You just need to create a soft link:
+```bash
+cd prompt_tipadapter
+ln -s /data/jason/data/coopdata data/
+```
 
-## Get Started
-### Configs
+
+### Step 3: Change  Configs
+
 The running configurations can be modified in `configs/dataset.yaml`, including shot numbers, visual encoders, and hyperparamters. 
 
-For simplicity, we provide the hyperparamters achieving the overall best performance on 1\~16 shots for a dataset, which accord with the scores reported in the paper. If respectively tuned for different shot numbers, the 1\~16-shot performance can be further improved. You can edit the `search_scale`, `search_step`, `init_beta` and `init_alpha` for fine-grained tuning.
+For our evauation of 1shot, 2shots, 4shots, 8shots, 16shots, YOU NEED to change the shots first and then running the follow script.
 
 Note that the default `load_cache` and `load_pre_feat` are `False` for the first running, which will store the cache model and val/test features in `configs/dataset/`. For later running, they can be set as `True` for faster hyperparamters tuning.
 
-### Numerical Results
-We provide Tip-Adapter's **numerical results** in Figure 4 and 5 of the paper at [exp.log](https://github.com/gaopengcuhk/Tip-Adapter/blob/main/exp.log).
 
-TODO: Add CLIP-Adapter's numerical results for comparison.
-
-### Running
+### Step 4: Running
 For ImageNet dataset:
 ```bash
 CUDA_VISIBLE_DEVICES=0 python main_imagenet.py --config configs/imagenet.yaml
 ```
 For other 10 datasets:
 ```bash
-CUDA_VISIBLE_DEVICES=0 python main.py --config configs/dataset.yaml
-```
-The fine-tuning of Tip-Adapter-F will be automatically conducted after the training-free Tip-Adapter.
+CUDA_VISIBLE_DEVICES=1 python main.py --config configs/dataset.yaml
 
-## Contributors
-[Renrui Zhang](https://github.com/ZrrSkywalker), Peng Gao
+For example:
+CUDA_VISIBLE_DEVICES=2 python main.py --config configs/oxford_pets.yaml
+CUDA_VISIBLE_DEVICES=2 python main.py --config configs/stanford_cars.yaml
+CUDA_VISIBLE_DEVICES=3 python main.py --config configs/caltech101.yaml
+CUDA_VISIBLE_DEVICES=1 python main.py --config configs/oxford_flowers.yaml
+CUDA_VISIBLE_DEVICES=0 python main.py --config configs/fgvc.yaml
+CUDA_VISIBLE_DEVICES=3 python main.py --config configs/food101.yaml
+CUDA_VISIBLE_DEVICES=1 python main.py --config configs/sun397.yaml
+CUDA_VISIBLE_DEVICES=2 python main.py --config configs/ucf101.yaml
+CUDA_VISIBLE_DEVICES=1 python main.py --config configs/dtd.yaml
+CUDA_VISIBLE_DEVICES=2 python main.py --config configs/eurosat.yaml
+```
+### Step 5: Draw Pictures
+```bash
+python draw_curves.py
+```
+
+
 
 ## Acknowledgement
 This repo benefits from [CLIP](https://github.com/openai/CLIP), [CoOp](https://github.com/KaiyangZhou/Dassl.pytorch) and [CLIP-Adapter](https://github.com/gaopengcuhk/CLIP-Adapter). Thanks for their wonderful works.
 
-## Citation
-```bash
-@article{zhang2021tip,
-  title={Tip-Adapter: Training-free CLIP-Adapter for Better Vision-Language Modeling},
-  author={Zhang, Renrui and Fang, Rongyao and Gao, Peng and Zhang, Wei and Li, Kunchang and Dai, Jifeng and Qiao, Yu and Li, Hongsheng},
-  journal={arXiv preprint arXiv:2111.03930},
-  year={2021}
-}
-```
-
-## Contact
-If you have any question about this project, please feel free to contact zhangrenrui@pjlab.org.cn and gaopeng@pjlab.org.cn.
