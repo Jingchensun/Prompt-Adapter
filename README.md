@@ -18,6 +18,12 @@ All datasets are set in A5000 server. You just need to create a soft link:
 cd prompt_tipadapter
 ln -s /data/jason/data/coopdata data/
 ```
+### Step 2-2: Prompt Download
+The prompt is in the A5000 server, just copy it under the file 'prompt_tipadapter'
+```bash
+/home/jason/mvlpt/prompt_tensor_init.tar
+```
+
 
 
 ### Step 3: Change  Configs
