@@ -146,11 +146,11 @@ def main():
 
     # Textual features
     print("Getting textual features as CLIP's classifier.")
-    clip_weights = clip_classifier(imagenet.classnames, imagenet.template, clip_model)
+    #clip_weights = clip_classifier(imagenet.classnames, imagenet.template, clip_model)
 
     #clip_weights = torch.load('./prompt_multitask/multitask_caltech101_prompt.pt',map_location='cuda')
-    # clip_weights = torch.load('./prompt_200epoch_vit16/imagenet_vit16.pt',map_location='cuda')
-    # clip_weights = clip_weights.permute(1, 0)
+    clip_weights = torch.load('./prompt_tensor_init/imagenet_vit16.pt',map_location='cuda')
+    clip_weights = clip_weights.permute(1, 0)
     # print('clip_weights:',clip_weights.size()) #torch.Size([1024, 100]) torch.Size([512, 2191])
 
 
