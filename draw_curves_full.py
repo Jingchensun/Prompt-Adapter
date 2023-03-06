@@ -25,7 +25,9 @@ COLORS = {
     "CoOp": "C0",
     "UPT": "C2",
     "tip_adapter_f": "C1",
-    "prompt_adapter_f": "C3"
+    "prompt_adapter_f": "C3",
+    "tip_adapter": "C5",
+    "prompt_adapter": "C6"
 }
 MS = 3
 ALPHA = 1
@@ -37,7 +39,10 @@ average = {
     "UPT": np.array([0., 0., 0., 0., 0.]),
     "tip_adapter_f": np.array([0., 0., 0., 0., 0.]),
     "prompt_adapter_f": np.array([0., 0., 0., 0., 0.]),
-    "linear": np.array([0., 0., 0., 0., 0.])
+    "linear": np.array([0., 0., 0., 0., 0.]),
+    "tip_adapter": np.array([0., 0., 0., 0., 0.]),
+    "prompt_adapter": np.array([0., 0., 0., 0., 0.])
+
 }
 
 for dataset in datasets:
@@ -60,6 +65,12 @@ for dataset in datasets:
     linear = file[dataset][22:27]
     linear = [float(num) for num in linear]
 
+    tip_adapter = file[dataset][27:32]
+    tip_adapter = [float(num) for num in tip_adapter]
+
+    prompt_adapter = file[dataset][32:37]
+    prompt_adapter = [float(num) for num in prompt_adapter]
+
     
 
     average["zs"] += zs
@@ -68,6 +79,8 @@ for dataset in datasets:
     average["tip_adapter_f"] += np.array(tip_adapter_f)
     average["prompt_adapter_f"] += np.array(prompt_adapter_f)
     average["linear"] += np.array(linear)
+    average["tip_adapter"] += np.array(tip_adapter)
+    average["prompt_adapter"] += np.array(prompt_adapter)
 
     # Plot
     values = [zs]
@@ -76,6 +89,8 @@ for dataset in datasets:
     values += UPT
     values += tip_adapter_f
     values += prompt_adapter_f
+    values += prompt_adapter
+    values += tip_adapter
 
 
     val_min, val_max = min(values), max(values)
@@ -119,6 +134,23 @@ for dataset in datasets:
         alpha=ALPHA
     )
     ax.plot(
+        shots, tip_adapter,
+        marker="o",
+        markersize=MS,
+        color=COLORS["tip_adapter"],
+        label="Tip-Adapter",
+        alpha=ALPHA
+    )
+
+    ax.plot(
+        shots, prompt_adapter,
+        marker="o",
+        markersize=MS,
+        color=COLORS["prompt_adapter"],
+        label="Prompt-Adapter",
+        alpha=ALPHA
+    )
+    ax.plot(
         shots, tip_adapter_f,
         marker="o",
         markersize=MS,
@@ -158,6 +190,9 @@ CoOp = list(average["CoOp"])
 UPT = list(average["UPT"])
 tip_adapter_f = list(average["tip_adapter_f"])
 prompt_adapter_f = list(average["prompt_adapter_f"])
+tip_adapter = list(average["tip_adapter"])
+prompt_adapter = list(average["prompt_adapter"])
+
 
 values = [zs]
 values += linear
@@ -165,6 +200,9 @@ values += CoOp
 values += UPT
 values += tip_adapter_f
 values += prompt_adapter_f
+values += tip_adapter
+values += prompt_adapter
+
 val_min, val_max = min(values), max(values)
 diff = val_max - val_min
 val_bot = val_min - diff*0.05
@@ -205,6 +243,23 @@ ax.plot(
     label="UPT",
     alpha=ALPHA
 )
+ax.plot(
+        shots, tip_adapter,
+        marker="o",
+        markersize=MS,
+        color=COLORS["tip_adapter"],
+        label="Tip-Adapter",
+        alpha=ALPHA
+    )
+
+ax.plot(
+        shots, prompt_adapter,
+        marker="o",
+        markersize=MS,
+        color=COLORS["prompt_adapter"],
+        label="Prompt-Adapter",
+        alpha=ALPHA
+    )
 ax.plot(
     shots, tip_adapter_f,
     marker="o",
