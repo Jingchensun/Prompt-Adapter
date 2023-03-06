@@ -9,7 +9,7 @@ template = ['a photo of {}, a type of food.']
 
 class Food101(DatasetBase):
 
-    dataset_dir = 'food-101'
+    dataset_dir = 'data/food-101'
 
     def __init__(self, root, num_shots):
         self.dataset_dir = os.path.join(root, self.dataset_dir)

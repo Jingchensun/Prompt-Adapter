@@ -287,7 +287,7 @@ def run_tip_adapter_F(cfg, cache_keys, cache_values, clip_model, train_loader_F,
     
     #PATH=cfg['cache_dir'] + "/best_F_" + str(cfg['shots']) + "shots.pt"
     #model.load_state_dict(torch.load(PATH))
-    print(f"**** After fine-tuning, Tip-Adapter-F's best test accuracy: {best_acc:.2f}, at epoch: {best_epoch}. ****\n")
+    print(f"**** After fine-tuning, Tip-Adapter-F's best test accuracy: {best_acc:.4f}, at epoch: {best_epoch}. ****\n")
 
 
 def main():
@@ -353,7 +353,7 @@ def main():
     #test_features, test_labels = pre_load_features(cfg, "test", clip_model, test_loader)
 
     # ------------------------------------------ Tip-Adapter ------------------------------------------
-    #run_tip_adapter(cfg, cache_keys, cache_values, val_features, val_labels, test_features, test_labels, clip_weights)
+    run_tip_adapter(cfg, cache_keys, cache_values, val_features, val_labels, test_features, test_labels, clip_weights)
 
     # ------------------------------------------ Tip-Adapter-F ------------------------------------------
     run_tip_adapter_F(cfg, cache_keys, cache_values, clip_model, train_loader_F, (dataset.classnames), test_loader)

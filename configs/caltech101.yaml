@@ -3,11 +3,11 @@ root_path: ''
 
 
 # ------ Load Cache and Features ------
-load_cache: False
-load_pre_feat: False
+# load_cache: False
+# load_pre_feat: False
 
-# load_cache: True
-# load_pre_feat: True
+load_cache: True
+load_pre_feat: True
 
 
 # ------ Hyperparamters ------
@@ -28,4 +28,4 @@ backbone: 'RN50'
 
 lr: 0.001
 augment_epoch: 10
-train_epoch: 200
+train_epoch: 20
