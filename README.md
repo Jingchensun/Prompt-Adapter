@@ -13,38 +13,35 @@ pip install -r requirements.txt
 ```
 
 ### Step 2: Dataset
-All datasets are set in A5000 server. You just need to create a soft link:
+Follow [DATASETS.md](DATASETS.md) to install the datasets from [CoOp](https://github.com/KaiyangZhou/CoOp/tree/main/datasets). Or run the following script(11 datasets, include ImageNet): 
 ```bash
-cd prompt_tipadapter
-ln -s /data/jason/data/coopdata data/
-```
-### Step 2-2: Prompt Download
-The prompt is in the A5000 server, just copy it under the file 'prompt_tipadapter'
-```bash
-/home/jason/mvlpt/prompt_tensor_init.tar
+bash scripts/data.sh
 ```
 
 
+### Step 3: Prompt Download
+Download the pretrained prompt from the [link](https://drive.google.com/file/d/1bfCXO9iE3ys3__xnOrC6bHAVXVcFXkyW/view?usp=share_link)
+And decompress it under the folder 'prompt_tipadapter/prompt_tensor_init'. 
 
-### Step 3: Change  Configs
+
+
+
+### Step 4: Change  Configs
 
 The running configurations can be modified in `configs/dataset.yaml`, including shot numbers, visual encoders, and hyperparamters. 
 
-For our evauation of 1shot, 2shots, 4shots, 8shots, 16shots, YOU NEED to change the shots first and then running the follow script.
+For our evauation of 1shot, 2shots, 4shots, 8shots, 16shots, 20shots, YOU NEED to change the shots first and then running the follow script.
 
 Note that the default `load_cache` and `load_pre_feat` are `False` for the first running, which will store the cache model and val/test features in `configs/dataset/`. For later running, they can be set as `True` for faster hyperparamters tuning.
 
 
-### Step 4: Running
+### Step 5: Running
 For ImageNet dataset:
 ```bash
 CUDA_VISIBLE_DEVICES=0 python main_imagenet.py --config configs/imagenet.yaml
 ```
 For other 10 datasets:
 ```bash
-CUDA_VISIBLE_DEVICES=1 python main.py --config configs/dataset.yaml
-
-For example:
 CUDA_VISIBLE_DEVICES=2 python main.py --config configs/oxford_pets.yaml
 CUDA_VISIBLE_DEVICES=2 python main.py --config configs/stanford_cars.yaml
 CUDA_VISIBLE_DEVICES=3 python main.py --config configs/caltech101.yaml
@@ -56,13 +53,9 @@ CUDA_VISIBLE_DEVICES=2 python main.py --config configs/ucf101.yaml
 CUDA_VISIBLE_DEVICES=1 python main.py --config configs/dtd.yaml
 CUDA_VISIBLE_DEVICES=2 python main.py --config configs/eurosat.yaml
 ```
-### Step 5: Draw Pictures
-```bash
-python draw_curves.py
-```
 
 
 
 ## Acknowledgement
-This repo benefits from [CLIP](https://github.com/openai/CLIP), [CoOp](https://github.com/KaiyangZhou/Dassl.pytorch) and [CLIP-Adapter](https://github.com/gaopengcuhk/CLIP-Adapter). Thanks for their wonderful works.
+This repo benefits from [Tip-Adapter](https://github.com/gaopengcuhk/Tip-Adapter) and [CoOp](https://github.com/KaiyangZhou/Dassl.pytorch). Thanks for their wonderful works.
 
