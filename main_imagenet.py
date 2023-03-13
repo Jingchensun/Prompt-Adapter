@@ -149,7 +149,7 @@ def main():
     #clip_weights = clip_classifier(imagenet.classnames, imagenet.template, clip_model)
 
     #clip_weights = torch.load('./prompt_multitask/multitask_caltech101_prompt.pt',map_location='cuda')
-    clip_weights = torch.load('./prompt_tensor_init/imagenet_vit16.pt',map_location='cuda')
+    clip_weights = torch.load('/home/jason/mvlpt-ori/prompt_tensor_init/imagenet_vit16.pt',map_location='cuda')
     clip_weights = clip_weights.permute(1, 0)
     # print('clip_weights:',clip_weights.size()) #torch.Size([1024, 100]) torch.Size([512, 2191])
 
@@ -177,7 +177,7 @@ def main():
     run_tip_adapter(cfg, cache_keys, cache_values, test_features, test_labels, clip_weights)
 
     # ------------------------------------------ Tip-Adapter-F ------------------------------------------
-    run_tip_adapter_F(cfg, cache_keys, cache_values, test_features, test_labels, clip_weights, clip_model, train_loader_F)
+    # run_tip_adapter_F(cfg, cache_keys, cache_values, test_features, test_labels, clip_weights, clip_model, train_loader_F)
            
 
 if __name__ == '__main__':

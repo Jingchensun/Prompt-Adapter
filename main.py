@@ -191,7 +191,7 @@ def main():
 
 
     # #clip_weights = torch.load('./prompt_multitask/multitask_caltech101_prompt.pt',map_location='cuda')
-    clip_weights = torch.load('./prompt_tensor_init/oxfordpets_vit16.pt',map_location='cuda')
+    clip_weights = torch.load('/home/jason/mvlpt-ori/prompt_tensor_init/food101_vit16.pt',map_location='cuda')
     clip_weights = clip_weights.permute(1, 0)
     # print('clip_weights:',clip_weights.size()) #torch.Size([1024, 100]) torch.Size([512, 2191])
 

@@ -14,8 +14,8 @@ load_pre_feat: False
 search_hp: True
 # search_hp: False
 
-search_scale: [10, 10]
-search_step: [200, 20]
+search_scale: [50, 50]
+search_step: [200, 200]
 
 init_beta: 1
 init_alpha: 1.17
@@ -23,7 +23,7 @@ init_alpha: 1.17
 
 # ------ Basic Config ------
 dataset: 'food101'
-shots: 16
+shots: 20
 backbone: 'ViT-B/16'
 
 lr: 0.001

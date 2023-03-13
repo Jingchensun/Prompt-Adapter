@@ -71,8 +71,6 @@ for dataset in datasets:
     prompt_adapter = file[dataset][32:37]
     prompt_adapter = [float(num) for num in prompt_adapter]
 
-    
-
     average["zs"] += zs
     average["CoOp"] += np.array(CoOp)
     average["UPT"] += np.array(UPT)
