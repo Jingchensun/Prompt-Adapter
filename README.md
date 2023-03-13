@@ -1,4 +1,4 @@
-# Prompt-Adapter: Prompt based Training-free Adaption of CLIP for Few-shot Classification
+# Prompt Tuning based Adapter for Vision-Language Model Adaption
 
 
 ### Step 1: Installation
