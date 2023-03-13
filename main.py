@@ -189,7 +189,7 @@ def main():
     print("\nGetting textual features as CLIP's classifier.")
     #clip_weights = clip_classifier(dataset.classnames, dataset.template, clip_model)
 
-    path = str('/home/jason/mvlpt-ori/prompt_tensor_init/' + cfg['dataset'] +'_vit16.pt')
+    path = str('./prompt_tensor_init/' + cfg['dataset'] +'_vit16.pt')
     clip_weights = torch.load(path, map_location='cuda')
     clip_weights = clip_weights.permute(1, 0)
 
