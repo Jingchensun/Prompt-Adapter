@@ -42,7 +42,7 @@ def run_tip_adapter(cfg, cache_keys, cache_values, val_features, val_labels, tes
     
     tip_logits = clip_logits + cache_logits * alpha
     acc = cls_acc(tip_logits, val_labels)
-    print("**** Tip-Adapter's val accuracy: {:.2f}. ****\n".format(acc))
+    print("**** Prompt-Adapter's val accuracy: {:.2f}. ****\n".format(acc))
 
     # Search Hyperparameters
     best_beta, best_alpha = search_hp(cfg, cache_keys, cache_values, val_features, val_labels, clip_weights)
@@ -61,7 +61,7 @@ def run_tip_adapter(cfg, cache_keys, cache_values, val_features, val_labels, tes
     
     tip_logits = clip_logits + cache_logits * best_alpha
     acc = cls_acc(tip_logits, test_labels)
-    print("**** Tip-Adapter's test accuracy: {:.2f}. ****\n".format(acc))
+    print("**** Prompt-Adapter's test accuracy: {:.2f}. ****\n".format(acc))
 
 
 def run_tip_adapter_F(cfg, cache_keys, cache_values, val_features, val_labels, test_features, test_labels, clip_weights, clip_model, train_loader_F):
@@ -120,14 +120,14 @@ def run_tip_adapter_F(cfg, cache_keys, cache_values, val_features, val_labels, t
         tip_logits = clip_logits + cache_logits * alpha
         acc = cls_acc(tip_logits, test_labels)
 
-        print("**** Tip-Adapter-F's test accuracy: {:.2f}. ****\n".format(acc))
+        print("**** Prompt-Adapter-F's test accuracy: {:.2f}. ****\n".format(acc))
         if acc > best_acc:
             best_acc = acc
             best_epoch = train_idx
             torch.save(adapter.weight, cfg['cache_dir'] + "/best_F_" + str(cfg['shots']) + "shots.pt")
     
     adapter.weight = torch.load(cfg['cache_dir'] + "/best_F_" + str(cfg['shots']) + "shots.pt")
-    print(f"**** After fine-tuning, Tip-Adapter-F's best test accuracy: {best_acc:.2f}, at epoch: {best_epoch}. ****\n")
+    print(f"**** After fine-tuning, Prompt-Adapter-F's best test accuracy: {best_acc:.2f}, at epoch: {best_epoch}. ****\n")
 
     print("\n-------- Searching hyperparameters on the val set. --------")
 
@@ -143,7 +143,7 @@ def run_tip_adapter_F(cfg, cache_keys, cache_values, val_features, val_labels, t
     
     tip_logits = clip_logits + cache_logits * best_alpha
     acc = cls_acc(tip_logits, test_labels)
-    print("**** Tip-Adapter-F's test accuracy: {:.2f}. ****\n".format(max(best_acc, acc)))
+    print("**** Prompt-Adapter-F's test accuracy: {:.2f}. ****\n".format(max(best_acc, acc)))
 
 
 def main():
@@ -189,22 +189,13 @@ def main():
     print("\nGetting textual features as CLIP's classifier.")
     #clip_weights = clip_classifier(dataset.classnames, dataset.template, clip_model)
 
-
-    # #clip_weights = torch.load('./prompt_multitask/multitask_caltech101_prompt.pt',map_location='cuda')
-    clip_weights = torch.load('/home/jason/mvlpt-ori/prompt_tensor_init/food101_vit16.pt',map_location='cuda')
+    path = str('/home/jason/mvlpt-ori/prompt_tensor_init/' + cfg['dataset'] +'_vit16.pt')
+    clip_weights = torch.load(path, map_location='cuda')
     clip_weights = clip_weights.permute(1, 0)
-    # print('clip_weights:',clip_weights.size()) #torch.Size([1024, 100]) torch.Size([512, 2191])
-
-
 
     # Construct the cache model by few-shot training set
     print("\nConstructing cache model by few-shot visual features and labels.")
     cache_keys, cache_values = build_cache_model(cfg, clip_model, train_loader_cache)
-    # cache_keys = torch.load('caches2/' + '/multi_task_keys_' + str(16) + "shots.pt").cuda()
-    # print(cache_keys.size()) #torch.Size([512, 35056])
-    # cache_values = torch.load('caches2/' + '/multi_task_values_' + str(16) + "shots.pt").cuda()
-    # print(cache_values.size()) #torch.Size([35056, 2191])
-
 
     # Pre-load val features
     print("\nLoading visual features and labels from val set.")
