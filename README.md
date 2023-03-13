@@ -21,7 +21,7 @@ bash scripts/data.sh
 
 ### Step 3: Prompt Download
 Download the pretrained prompt from the [link](https://drive.google.com/file/d/1bfCXO9iE3ys3__xnOrC6bHAVXVcFXkyW/view?usp=share_link)
-And decompress it under the folder `prompt_tipadapter/prompt_tensor_init`. 
+And decompress it under the folder `prompt_adapter/prompt_tensor_init`. 
 ```bash
 tar -xvf prompt_tensor_init.tar
 ```
