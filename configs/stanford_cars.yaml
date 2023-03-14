@@ -26,6 +26,6 @@ dataset: 'stanford_cars'
 shots: 20
 backbone: 'ViT-B/16'
 
-lr: 0.001
+lr: 0.005
 augment_epoch: 10
 train_epoch: 20
