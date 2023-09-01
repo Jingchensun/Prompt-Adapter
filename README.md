@@ -13,7 +13,7 @@ pip install -r requirements.txt
 ```
 
 ### Step 2: Dataset
-Follow [DATASETS.md](DATASETS.md) to install the datasets from [CoOp](https://github.com/KaiyangZhou/CoOp/tree/main/datasets). Or run the following script(11 datasets, include ImageNet): 
+Follow [DATASETS.md](https://github.com/gaopengcuhk/Tip-Adapter/blob/main/DATASET.md) to install the datasets used in the paper. Or run the following script(11 datasets, include ImageNet): 
 ```bash
 bash scripts/data.sh
 ```
