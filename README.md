@@ -39,20 +39,11 @@ Note that the default `load_cache` and `load_pre_feat` are `False` for the first
 ### Step 5: Running
 For ImageNet dataset:
 ```bash
-CUDA_VISIBLE_DEVICES=0 python main_imagenet.py --config configs/imagenet.yaml
+python main_imagenet.py --config configs/imagenet.yaml
 ```
 For other 10 datasets:
 ```bash
-CUDA_VISIBLE_DEVICES=2 python main.py --config configs/oxford_pets.yaml
-CUDA_VISIBLE_DEVICES=2 python main.py --config configs/stanford_cars.yaml
-CUDA_VISIBLE_DEVICES=3 python main.py --config configs/caltech101.yaml
-CUDA_VISIBLE_DEVICES=1 python main.py --config configs/oxford_flowers.yaml
-CUDA_VISIBLE_DEVICES=0 python main.py --config configs/fgvc.yaml
-CUDA_VISIBLE_DEVICES=3 python main.py --config configs/food101.yaml
-CUDA_VISIBLE_DEVICES=1 python main.py --config configs/sun397.yaml
-CUDA_VISIBLE_DEVICES=2 python main.py --config configs/ucf101.yaml
-CUDA_VISIBLE_DEVICES=1 python main.py --config configs/dtd.yaml
-CUDA_VISIBLE_DEVICES=2 python main.py --config configs/eurosat.yaml
+python main.py --config configs/oxford_pets.yaml
 ```
 
 
