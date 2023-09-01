@@ -51,3 +51,12 @@ python main.py --config configs/oxford_pets.yaml
 ## Acknowledgement
 This repo benefits from [Tip-Adapter](https://github.com/gaopengcuhk/Tip-Adapter) and [CoOp](https://github.com/KaiyangZhou/Dassl.pytorch). Thanks for their wonderful works.
 
+## Citation
+```bash
+@article{sun2023prompt,
+  title={Prompt Tuning based Adapter for Vision-Language Model Adaption},
+  author={Sun, Jingchen and Qin, Jiayu and Lin, Zihao and Chen, Changyou},
+  journal={arXiv preprint arXiv:2303.15234},
+  year={2023}
+}
+```
